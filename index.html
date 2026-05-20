@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DamonBot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: #f9fafb;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    #chat {
+      background: #1f2937;
+      border-radius: 12px;
+      padding: 20px;
+      min-height: 400px;
+      margin-bottom: 20px;
+      overflow-y: auto;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .user {
+      background: #2563eb;
+      text-align: right;
+    }
+
+    .assistant {
+      background: #374151;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      padding: 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 14px 20px;
+      border-radius: 8px;
+      border: none;
+      background: #10b981;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      background: #6b7280;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>DamonBot</h1>
+
+    <div id="chat"></div>
+
+    <div class="input-row">
+      <input id="messageInput" placeholder="Type your message..." />
+      <button id="sendButton">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const chat = document.getElementById("chat");
+    const messageInput = document.getElementById("messageInput");
+    const sendButton = document.getElementById("sendButton");
+
+    let history = [];
+
+    function addMessage(role, content) {
+      const div = document.createElement("div");
+      div.className = `message ${role}`;
+      div.textContent = content;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const message = messageInput.value.trim();
+
+      if (!message) {
+        return;
+      }
+
+      addMessage("user", message);
+      messageInput.value = "";
+      sendButton.disabled = true;
+
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message,
+            history
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error("Server error");
+        }
+
+        const data = await response.json();
+        history = data.history;
+
+        addMessage("assistant", data.reply);
+      } catch (error) {
+        addMessage("assistant", "Error: Could not get a response from the server.");
+        console.error(error);
+      } finally {
+        sendButton.disabled = false;
+        messageInput.focus();
+      }
+    }
+
+    sendButton.addEventListener("click", sendMessage);
+
+    messageInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
