@@ -2,105 +2,438 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
   <title>DamonBot</title>
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111827;
-      color: #f9fafb;
-      margin: 0;
-      padding: 0;
+    :root {
+      --bg: #0f1117;
+      --panel: #171923;
+      --panel-light: #222635;
+      --user: #5b21b6;
+      --bot: #2d3748;
+      --accent: #a855f7;
+      --accent-hover: #9333ea;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --error: #ef4444;
+      --border: #334155;
     }
 
-    .container {
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 20px;
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    body {
+      min-height: 100dvh;
+      background:
+        radial-gradient(circle at top left, rgba(168, 85, 247, 0.18), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(91, 33, 182, 0.25), transparent 30%),
+        var(--bg);
+    }
+
+    .page {
+      width: min(920px, 100%);
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 18px;
+      padding-bottom: max(18px, env(safe-area-inset-bottom));
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 14px;
+      flex-shrink: 0;
     }
 
     h1 {
-      text-align: center;
+      margin: 0;
+      font-size: clamp(1.7rem, 6vw, 2.4rem);
+      letter-spacing: 0.04em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-top: 8px;
+      font-size: clamp(0.85rem, 3.5vw, 0.95rem);
+      line-height: 1.35;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      align-items: center;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #64748b;
+      flex-shrink: 0;
+    }
+
+    .status-dot.online {
+      background: #22c55e;
+    }
+
+    .status-dot.offline {
+      background: #ef4444;
+    }
+
+    .chat-shell {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: rgba(23, 25, 35, 0.94);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 20px 80px rgba(0, 0, 0, 0.35);
     }
 
     #chat {
-      background: #1f2937;
-      border-radius: 12px;
-      padding: 20px;
-      min-height: 400px;
-      margin-bottom: 20px;
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
+      padding: 18px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
     }
 
     .message {
+      width: fit-content;
+      max-width: min(78%, 680px);
+      padding: 12px 14px;
+      border-radius: 15px;
+      margin-bottom: 14px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      font-size: 1rem;
+    }
+
+    .message.user {
+      margin-left: auto;
+      background: var(--user);
+      border-bottom-right-radius: 5px;
+    }
+
+    .message.assistant {
+      margin-right: auto;
+      background: var(--bot);
+      border-bottom-left-radius: 5px;
+    }
+
+    .message.system {
+      margin-left: auto;
+      margin-right: auto;
+      background: transparent;
+      border: 1px dashed var(--border);
+      color: var(--muted);
+      text-align: center;
+      max-width: 92%;
+      font-size: 0.9rem;
+    }
+
+    .message.error {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      color: #fecaca;
+    }
+
+    .input-area {
+      flex-shrink: 0;
+      border-top: 1px solid var(--border);
+      background: rgba(34, 38, 53, 0.98);
       padding: 12px;
-      border-radius: 10px;
-      margin-bottom: 12px;
-      line-height: 1.4;
-    }
-
-    .user {
-      background: #2563eb;
-      text-align: right;
-    }
-
-    .assistant {
-      background: #374151;
-    }
-
-    .input-row {
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
       display: flex;
       gap: 10px;
+      align-items: flex-end;
     }
 
-    input {
+    #messageInput {
       flex: 1;
-      padding: 14px;
-      border-radius: 8px;
-      border: none;
+      width: 100%;
+      resize: none;
+      min-height: 48px;
+      max-height: 130px;
+      padding: 13px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #0f172a;
+      color: var(--text);
       font-size: 16px;
+      outline: none;
+      line-height: 1.35;
+      font-family: inherit;
+    }
+
+    #messageInput:focus {
+      border-color: var(--accent);
     }
 
     button {
-      padding: 14px 20px;
-      border-radius: 8px;
       border: none;
-      background: #10b981;
+      border-radius: 14px;
+      background: var(--accent);
       color: white;
-      font-size: 16px;
+      padding: 0 20px;
+      height: 48px;
+      font-size: 1rem;
+      font-weight: bold;
       cursor: pointer;
+      min-width: 88px;
+      touch-action: manipulation;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
     }
 
     button:disabled {
-      background: #6b7280;
+      background: #64748b;
       cursor: not-allowed;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .secondary-button {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 9px 12px;
+      height: 40px;
+      min-width: auto;
+      font-size: 0.9rem;
+    }
+
+    .secondary-button:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    @media (max-width: 700px) {
+      .page {
+        padding: 10px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+      }
+
+      header {
+        margin-bottom: 10px;
+      }
+
+      .subtitle {
+        max-width: 320px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .chat-shell {
+        border-radius: 16px;
+      }
+
+      #chat {
+        padding: 12px;
+      }
+
+      .message {
+        max-width: 88%;
+        font-size: 0.98rem;
+        padding: 11px 13px;
+      }
+
+      .input-area {
+        padding: 10px;
+        gap: 8px;
+      }
+
+      button {
+        min-width: 74px;
+        padding: 0 14px;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .page {
+        padding: 0;
+        min-height: 100dvh;
+      }
+
+      header {
+        padding: 12px 10px 8px;
+        margin-bottom: 0;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .status-row {
+        font-size: 0.78rem;
+        margin-top: 7px;
+      }
+
+      .chat-shell {
+        border-left: none;
+        border-right: none;
+        border-radius: 0;
+        flex: 1;
+      }
+
+      .message {
+        max-width: 92%;
+        font-size: 0.96rem;
+      }
+
+      .controls {
+        display: none;
+      }
+
+      .input-area {
+        position: sticky;
+        bottom: 0;
+      }
     }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <h1>DamonBot</h1>
+  <main class="page">
+    <header>
+      <h1>DamonBot</h1>
+      <div class="subtitle">Mischievous, sarcastic, conversational AI chaos.</div>
 
-    <div id="chat"></div>
+      <div class="status-row">
+        <span id="statusDot" class="status-dot"></span>
+        <span id="statusText">Checking backend...</span>
+      </div>
+    </header>
 
-    <div class="input-row">
-      <input id="messageInput" placeholder="Type your message..." />
-      <button id="sendButton">Send</button>
+    <section class="chat-shell">
+      <div id="chat"></div>
+
+      <div class="input-area">
+        <textarea id="messageInput" placeholder="Say something to DamonBot..." rows="1"></textarea>
+        <button id="sendButton">Send</button>
+      </div>
+    </section>
+
+    <div class="controls">
+      <button class="secondary-button" id="clearButton">Clear chat</button>
     </div>
-  </div>
+  </main>
 
   <script>
+    /*
+      Replace this with your current public Cloudflare/ngrok backend URL.
+      Example:
+      const API_BASE_URL = "https://example.trycloudflare.com";
+    */
+    const API_BASE_URL = "https://mambo-coral-procedures-gibraltar.trycloudflare.com/";
+
     const chat = document.getElementById("chat");
     const messageInput = document.getElementById("messageInput");
     const sendButton = document.getElementById("sendButton");
+    const clearButton = document.getElementById("clearButton");
+    const statusDot = document.getElementById("statusDot");
+    const statusText = document.getElementById("statusText");
 
-    let history = [];
+    let history = JSON.parse(localStorage.getItem("damonbot_history") || "[]");
 
-    function addMessage(role, content) {
+    function saveHistory() {
+      localStorage.setItem("damonbot_history", JSON.stringify(history));
+    }
+
+    function addMessage(role, content, extraClass = "") {
       const div = document.createElement("div");
-      div.className = `message ${role}`;
+      div.className = `message ${role} ${extraClass}`.trim();
       div.textContent = content;
       chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
+    }
+
+    function renderHistory() {
+      chat.innerHTML = "";
+
+      if (history.length === 0) {
+        addMessage(
+          "system",
+          "DamonBot is awake. Probably plotting something minor and inconvenient."
+        );
+        return;
+      }
+
+      for (const message of history) {
+        addMessage(message.role, message.content);
+      }
+
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function setBackendStatus(isOnline, text) {
+      statusDot.classList.remove("online", "offline");
+
+      if (isOnline) {
+        statusDot.classList.add("online");
+      } else {
+        statusDot.classList.add("offline");
+      }
+
+      statusText.textContent = text;
+    }
+
+    async function checkBackendHealth() {
+      if (API_BASE_URL.includes("https://mambo-coral-procedures-gibraltar.trycloudflare.com/")) {
+        setBackendStatus(false, "Backend URL not configured");
+        addMessage(
+          "system",
+          "Edit index.html and replace YOUR-BACKEND-URL-HERE with your public backend URL."
+        );
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/health`);
+
+        if (!response.ok) {
+          throw new Error("Health check failed");
+        }
+
+        const data = await response.json();
+        setBackendStatus(true, data.message || "Backend online");
+      } catch (error) {
+        setBackendStatus(false, "Backend offline or blocked");
+        console.error(error);
+      }
+    }
+
+    function autoResizeTextarea() {
+      messageInput.style.height = "auto";
+      messageInput.style.height = `${Math.min(messageInput.scrollHeight, 130)}px`;
     }
 
     async function sendMessage() {
@@ -110,12 +443,18 @@
         return;
       }
 
+      if (API_BASE_URL.includes("https://mambo-coral-procedures-gibraltar.trycloudflare.com/")) {
+        addMessage("assistant", "Backend URL is not configured yet.", "error");
+        return;
+      }
+
       addMessage("user", message);
       messageInput.value = "";
+      autoResizeTextarea();
       sendButton.disabled = true;
 
       try {
-        const response = await fetch("/chat", {
+        const response = await fetch(`${API_BASE_URL}/chat`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -127,16 +466,24 @@
         });
 
         if (!response.ok) {
-          throw new Error("Server error");
+          const errorText = await response.text();
+          throw new Error(errorText || "Server error");
         }
 
         const data = await response.json();
+
         history = data.history;
+        saveHistory();
 
         addMessage("assistant", data.reply);
       } catch (error) {
-        addMessage("assistant", "Error: Could not get a response from the server.");
+        addMessage(
+          "assistant",
+          "Error: Could not reach DamonBot's backend. Check that your PC server and tunnel are running.",
+          "error"
+        );
         console.error(error);
+        checkBackendHealth();
       } finally {
         sendButton.disabled = false;
         messageInput.focus();
@@ -145,11 +492,28 @@
 
     sendButton.addEventListener("click", sendMessage);
 
+    messageInput.addEventListener("input", autoResizeTextarea);
+
     messageInput.addEventListener("keydown", function(event) {
-      if (event.key === "Enter") {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
         sendMessage();
       }
     });
+
+    clearButton.addEventListener("click", function() {
+      history = [];
+      saveHistory();
+      renderHistory();
+    });
+
+    window.addEventListener("resize", function() {
+      chat.scrollTop = chat.scrollHeight;
+    });
+
+    renderHistory();
+    autoResizeTextarea();
+    checkBackendHealth();
   </script>
 </body>
 </html>
