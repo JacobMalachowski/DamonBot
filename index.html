@@ -536,7 +536,7 @@
           body: JSON.stringify({
             message,
             history,
-            mode: modeSelect.value
+            mode: modeSelect ? modeSelect.value : "just_chatting"
           })
         });
 
