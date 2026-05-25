@@ -349,9 +349,8 @@
 
   <script>
     /*
-      Replace this with your current public Cloudflare/ngrok backend URL.
-      Example:
-      const API_BASE_URL = "https://example.trycloudflare.com";
+      This should be your current public Cloudflare/ngrok backend URL.
+      Do not add /health or /chat at the end.
     */
     const API_BASE_URL = "https://melbourne-appearing-deaths-pointer.trycloudflare.com";
 
@@ -362,7 +361,15 @@
     const statusDot = document.getElementById("statusDot");
     const statusText = document.getElementById("statusText");
 
-    let history = JSON.parse(localStorage.getItem("damonbot_history") || "[]");
+    let history = [];
+
+    try {
+      history = JSON.parse(localStorage.getItem("damonbot_history") || "[]");
+    } catch (error) {
+      console.error("Could not load saved history:", error);
+      history = [];
+      localStorage.removeItem("damonbot_history");
+    }
 
     function saveHistory() {
       localStorage.setItem("damonbot_history", JSON.stringify(history));
@@ -380,10 +387,7 @@
       chat.innerHTML = "";
 
       if (history.length === 0) {
-        addMessage(
-          "system",
-          "DamonBot is Online."
-        );
+        addMessage("system", "DamonBot is online.");
         return;
       }
 
@@ -406,12 +410,22 @@
       statusText.textContent = text;
     }
 
+    function isBackendConfigured() {
+      return (
+        API_BASE_URL &&
+        !API_BASE_URL.includes("YOUR-BACKEND-URL-HERE") &&
+        API_BASE_URL.startsWith("https://")
+      );
+    }
+
     async function checkBackendHealth() {
-      if (API_BASE_URL.includes("YOUR-BACKEND-URL-HERE")) {
+      console.log("Checking backend health:", API_BASE_URL);
+
+      if (!isBackendConfigured()) {
         setBackendStatus(false, "Backend URL not configured");
         addMessage(
           "system",
-          "Edit index.html and replace YOUR-BACKEND-URL-HERE with your public backend URL."
+          "Backend URL is not configured. Edit API_BASE_URL in index.html."
         );
         return;
       }
@@ -420,14 +434,14 @@
         const response = await fetch(`${API_BASE_URL}/health`);
 
         if (!response.ok) {
-          throw new Error("Health check failed");
+          throw new Error(`Health check failed with status ${response.status}`);
         }
 
         const data = await response.json();
         setBackendStatus(true, data.message || "Backend online");
       } catch (error) {
         setBackendStatus(false, "Backend offline or blocked");
-        console.error(error);
+        console.error("Backend health check error:", error);
       }
     }
 
@@ -439,11 +453,15 @@
     async function sendMessage() {
       const message = messageInput.value.trim();
 
+      console.log("Send clicked");
+      console.log("Message:", message);
+      console.log("API_BASE_URL:", API_BASE_URL);
+
       if (!message) {
         return;
       }
 
-      if (API_BASE_URL.includes("https://melbourne-appearing-deaths-pointer.trycloudflare.com")) {
+      if (!isBackendConfigured()) {
         addMessage("assistant", "Backend URL is not configured yet.", "error");
         return;
       }
@@ -467,7 +485,7 @@
 
         if (!response.ok) {
           const errorText = await response.text();
-          throw new Error(errorText || "Server error");
+          throw new Error(errorText || `Server error: ${response.status}`);
         }
 
         const data = await response.json();
@@ -482,7 +500,7 @@
           "Error: Could not reach DamonBot's backend. Check that your PC server and tunnel are running.",
           "error"
         );
-        console.error(error);
+        console.error("Chat request error:", error);
         checkBackendHealth();
       } finally {
         sendButton.disabled = false;
