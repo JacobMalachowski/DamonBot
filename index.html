@@ -277,6 +277,30 @@
       }
     }
 
+    .mode-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .mode-row select {
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .mode-row select:focus {
+      border-color: var(--accent);
+    }
+
     @media (max-width: 430px) {
       .page {
         padding: 0;
@@ -295,6 +319,16 @@
       .status-row {
         font-size: 0.78rem;
         margin-top: 7px;
+      }
+
+      .mode-row {
+        margin-top: 7px;
+        font-size: 0.78rem;
+      }
+
+      .mode-row select {
+        padding: 6px 8px;
+        font-size: 0.78rem;
       }
 
       .chat-shell {
@@ -331,6 +365,13 @@
         <span id="statusDot" class="status-dot"></span>
         <span id="statusText">Checking backend...</span>
       </div>
+      <div class="mode-row">
+        <label for="modeSelect">Mode:</label>
+        <select id="modeSelect">
+          <option value="just_chatting" selected>Just Chatting</option>
+          <option value="deep_talk">Deep Talk</option>
+        </select>
+      </div>
     </header>
 
     <section class="chat-shell">
@@ -360,6 +401,7 @@
     const clearButton = document.getElementById("clearButton");
     const statusDot = document.getElementById("statusDot");
     const statusText = document.getElementById("statusText");
+    const modeSelect = document.getElementById("modeSelect");
 
     let history = [];
 
@@ -370,6 +412,20 @@
       history = [];
       localStorage.removeItem("damonbot_history");
     }
+
+    const savedMode = localStorage.getItem("damonbot_mode") || "just_chatting";
+    modeSelect.value = savedMode;
+
+    modeSelect.addEventListener("change", function() {
+      localStorage.setItem("damonbot_mode", modeSelect.value);
+
+      addMessage(
+        "system",
+        modeSelect.value === "deep_talk"
+          ? "Switched to Deep Talk mode."
+          : "Switched to Just Chatting mode."
+      );
+    });
 
     function saveHistory() {
       localStorage.setItem("damonbot_history", JSON.stringify(history));
@@ -480,6 +536,7 @@
           body: JSON.stringify({
             message,
             history
+            mode: modeSelect.value
           })
         });
 
