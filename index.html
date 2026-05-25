@@ -353,7 +353,7 @@
       Example:
       const API_BASE_URL = "https://example.trycloudflare.com";
     */
-    const API_BASE_URL = "https://intersection-compounds-sunday-alexandria.trycloudflare.com";
+    const API_BASE_URL = "https://melbourne-appearing-deaths-pointer.trycloudflare.com";
 
     const chat = document.getElementById("chat");
     const messageInput = document.getElementById("messageInput");
@@ -407,7 +407,7 @@
     }
 
     async function checkBackendHealth() {
-      if (API_BASE_URL.includes("https://intersection-compounds-sunday-alexandria.trycloudflare.com")) {
+      if (API_BASE_URL.includes("https://melbourne-appearing-deaths-pointer.trycloudflare.com")) {
         setBackendStatus(false, "Backend URL not configured");
         addMessage(
           "system",
@@ -443,7 +443,7 @@
         return;
       }
 
-      if (API_BASE_URL.includes("  https://intersection-compounds-sunday-alexandria.trycloudflare.com")) {
+      if (API_BASE_URL.includes("https://melbourne-appearing-deaths-pointer.trycloudflare.com")) {
         addMessage("assistant", "Backend URL is not configured yet.", "error");
         return;
       }
